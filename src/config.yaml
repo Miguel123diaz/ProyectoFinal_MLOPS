@@ -1,6 +1,6 @@
-dataset_path: "data/train.csv"
+train_path: "data/train.csv"
+test_path: "data/test.csv"
 target_column: "Survived"
-test_size: 0.2
 random_state: 42
 
 model:
