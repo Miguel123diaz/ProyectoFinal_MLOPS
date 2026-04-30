@@ -1,6 +1,7 @@
 import pandas as pd
 import yaml
 import joblib
+import os
 from sklearn.ensemble import RandomForestClassifier
 
 # Cargar configuración
@@ -29,6 +30,9 @@ model = RandomForestClassifier(
     random_state=config["random_state"]
 )
 model.fit(X, y)
+
+# Crear carpeta models si no existe
+os.makedirs("models", exist_ok=True)
 
 # Guardar modelo y columnas
 joblib.dump(model, "models/model.pkl")
