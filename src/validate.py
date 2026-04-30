@@ -1,13 +1,14 @@
 import pandas as pd
 import yaml
 import joblib
+from sklearn.metrics import classification_report
 
 # Cargar configuración
 with open("src/config.yaml", "r") as f:
     config = yaml.safe_load(f)
 
 # Cargar dataset de prueba
-df_test = pd.read_csv(config["dataset_path"])
+df_test = pd.read_csv(config["test_path"])
 
 # Preprocesamiento
 df_test["Age"] = df_test["Age"].fillna(df_test["Age"].median())
@@ -30,4 +31,8 @@ model = joblib.load("models/model.pkl")
 
 # Validar
 accuracy = model.score(X_test, y_test)
+y_pred = model.predict(X_test)
+
 print(f"✅ Accuracy en validación: {accuracy:.4f}")
+print("📊 Reporte de clasificación:")
+print(classification_report(y_test, y_pred))
