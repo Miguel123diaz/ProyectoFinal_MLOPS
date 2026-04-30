@@ -1,36 +1,33 @@
 import pandas as pd
 import yaml
-import mlflow
-import mlflow.sklearn
-from sklearn.metrics import accuracy_score
+import joblib
 
-# 1. Cargar configuración
+# Cargar configuración
 with open("src/config.yaml", "r") as f:
     config = yaml.safe_load(f)
 
-# 2. Cargar dataset de prueba (usamos test.csv de Kaggle)
-df_test = pd.read_csv("data/test.csv")
+# Cargar dataset de prueba
+df_test = pd.read_csv(config["dataset_path"])
 
-# Seleccionar las mismas columnas que en train.py
-features = ["Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked"]
+# Preprocesamiento
+df_test["Age"] = df_test["Age"].fillna(df_test["Age"].median())
+df_test["Embarked"] = df_test["Embarked"].fillna(df_test["Embarked"].mode()[0])
+df_test["Fare"] = df_test["Fare"].fillna(df_test["Fare"].median())
 
-# Preprocesamiento igual que en train.py
-df_test["Sex"] = df_test["Sex"].map({"male": 0, "female": 1})
-df_test["Embarked"] = df_test["Embarked"].map({"C": 0, "Q": 1, "S": 2})
+# Separar target antes de convertir categóricas
+y_test = df_test[config["target_column"]]
+X_test = df_test.drop(columns=[config["target_column"]])
 
-df_test["Age"].fillna(df_test["Age"].median(), inplace=True)
-df_test["Embarked"].fillna(df_test["Embarked"].mode()[0], inplace=True)
-df_test["Fare"].fillna(df_test["Fare"].median(), inplace=True)
+# Convertir categóricas a numéricas
+X_test = pd.get_dummies(X_test, drop_first=True)
 
-X_test = df_test[features]
+# Asegurar que las columnas coincidan con las del entrenamiento
+train_columns = joblib.load("models/columns.pkl")
+X_test = X_test.reindex(columns=train_columns, fill_value=0)
 
-# 3. Cargar el modelo desde MLflow
-model_uri = "runs:/{}/model".format(mlflow.last_active_run().info.run_id)
-model = mlflow.sklearn.load_model(model_uri)
+# Cargar modelo entrenado
+model = joblib.load("models/model.pkl")
 
-# 4. Hacer predicciones
-y_pred = model.predict(X_test)
-
-print("Predicciones sobre test.csv:")
-print(y_pred[:20])  # mostramos las primeras 20
-
+# Validar
+accuracy = model.score(X_test, y_test)
+print(f"✅ Accuracy en validación: {accuracy:.4f}")
