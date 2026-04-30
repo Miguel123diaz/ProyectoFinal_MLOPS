@@ -12,7 +12,7 @@ with open("src/config.yaml", "r") as f:
     config = yaml.safe_load(f)
 
 # Cargar dataset
-df = pd.read_csv(config["dataset_path"])
+df = pd.read_csv(config["train_path"])
 
 # Preprocesamiento simple
 df["Age"] = df["Age"].fillna(df["Age"].median())
